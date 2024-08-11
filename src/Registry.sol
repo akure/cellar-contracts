@@ -6,6 +6,7 @@ import { Cellar } from "src/base/Cellar.sol";
 import { ERC20 } from "@solmate/tokens/ERC20.sol";
 import { BaseAdaptor } from "src/modules/adaptors/BaseAdaptor.sol";
 import { PriceRouter } from "src/modules/price-router/PriceRouter.sol";
+import { console } from "forge-std/console.sol"; // Importing console.sol for logging
 
 contract Registry is Ownable {
     // ============================================= ADDRESS CONFIG =============================================
@@ -50,6 +51,7 @@ contract Registry is Ownable {
      * @notice toggles a depositors  ability to deposit into cellars on behalf of users.
      */
     function setApprovedForDepositOnBehalf(address depositor, bool state) external onlyOwner {
+        console.log("Setting approved deposit on behalf: Depositor:", depositor, "State:", state);
         approvedForDepositOnBehalf[depositor] = state;
         emit DepositorOnBehalfChanged(depositor, state);
     }
@@ -58,15 +60,25 @@ contract Registry is Ownable {
      * @notice Set the address of the contract at a given id.
      */
     function setAddress(uint256 id, address newAddress) external {
+        console.log("Setting address: ID:", id, "New Address:", newAddress);
+
         if (id > 0) {
+            console.log("Setting address: Before _checkOwner" );
             _checkOwner();
-            if (id >= nextId) revert Registry__ContractNotRegistered(id);
+             console.log("Setting address: After _checkOwner" );
+            if (id >= nextId) {
+                console.log("Error: Contract not registered for ID:", id);
+                revert Registry__ContractNotRegistered(id);
+            }
         } else {
-            if (msg.sender != getAddress[0]) revert Registry__OnlyCallableByZeroId();
+            if (msg.sender != getAddress[0]) {
+                console.log("Error: Only callable by Zero ID");
+                revert Registry__OnlyCallableByZeroId();
+            }
         }
 
         emit AddressChanged(id, getAddress[id], newAddress);
-
+        console.log("Address changed: Old Address:", getAddress[id], "New Address:", newAddress);
         getAddress[id] = newAddress;
     }
 
@@ -78,6 +90,11 @@ contract Registry is Ownable {
      * @param priceRouter address of PriceRouter contract
      */
     constructor(address newOwner, address gravityBridge, address swapRouter, address priceRouter) Ownable() {
+        console.log("Initializing Registry:");
+        console.log("Owner:", newOwner);
+        console.log("Gravity Bridge:", gravityBridge);
+        console.log("Swap Router:", swapRouter);
+        console.log("Price Router:", priceRouter);
         _register(gravityBridge);
         _register(swapRouter);
         _register(priceRouter);
@@ -98,13 +115,16 @@ contract Registry is Ownable {
      * @param newContract address of the new contract to register
      */
     function register(address newContract) external onlyOwner {
+        console.log("Registering new contract: Address:", newContract);
         _register(newContract);
     }
 
     function _register(address newContract) internal {
+        console.log("Internal register call: Address:", newContract, "Current nextId:", nextId);
         getAddress[nextId] = newContract;
 
         emit Registered(nextId, newContract);
+        console.log("Contract registered: ID:", nextId, "Address:", newContract);
 
         nextId++;
     }
@@ -175,34 +195,70 @@ contract Registry is Ownable {
      * @notice Allows Zero Id address to set a new owner, after the transition period is up.
      */
     function transitionOwner(address newOwner) external {
-        if (msg.sender != getAddress[0]) revert Registry__OnlyCallableByZeroId();
-        if (pendingOwner != address(0)) revert Registry__TransitionPending();
-        if (newOwner == address(0)) revert Registry__NewOwnerCanNotBeZero();
+        console.log("Attempting ownership transition: New Owner:", newOwner);
+
+        if (msg.sender != getAddress[0]) {
+            console.log("Error: Only callable by Zero ID");
+            revert Registry__OnlyCallableByZeroId();
+        }
+        if (pendingOwner != address(0)) {
+            console.log("Error: Transition already pending");
+            revert Registry__TransitionPending();
+        }
+        if (newOwner == address(0)) {
+            console.log("Error: New owner cannot be zero address");
+            revert Registry__NewOwnerCanNotBeZero();
+        }
 
         pendingOwner = newOwner;
         transitionStart = block.timestamp;
+        emit OwnerTransitionStarted(newOwner, transitionStart);
+        console.log("Ownership transition started: New Owner:", newOwner, "Start Time:", transitionStart);
     }
 
     /**
      * @notice Allows Zero Id address to cancel an ongoing owner transition.
      */
     function cancelTransition() external {
-        if (msg.sender != getAddress[0]) revert Registry__OnlyCallableByZeroId();
-        if (pendingOwner == address(0)) revert Registry__TransitionNotPending();
+        console.log("Attempting to cancel ownership transition");
+
+        if (msg.sender != getAddress[0]) {
+            console.log("Error: Only callable by Zero ID");
+            revert Registry__OnlyCallableByZeroId();
+        }
+        if (pendingOwner == address(0)) {
+            console.log("Error: No transition pending");
+            revert Registry__TransitionNotPending();
+        }
 
         pendingOwner = address(0);
         transitionStart = 0;
+        emit OwnerTransitionCancelled();
+        console.log("Ownership transition cancelled");
     }
 
     /**
      * @notice Allows pending owner to complete the ownership transition.
      */
     function completeTransition() external {
-        if (pendingOwner == address(0)) revert Registry__TransitionNotPending();
-        if (msg.sender != pendingOwner) revert Registry__OnlyCallableByPendingOwner();
-        if (block.timestamp < transitionStart + TRANSITION_PERIOD) revert Registry__TransitionPending();
+        console.log("Attempting to complete ownership transition: Caller:", msg.sender);
+
+        if (pendingOwner == address(0)) {
+            console.log("Error: No transition pending");
+            revert Registry__TransitionNotPending();
+        }
+        if (msg.sender != pendingOwner) {
+            console.log("Error: Only callable by pending owner");
+            revert Registry__OnlyCallableByPendingOwner();
+        }
+        if (block.timestamp < transitionStart + TRANSITION_PERIOD) {
+            console.log("Error: Transition period not over");
+            revert Registry__TransitionPending();
+        }
 
         _transferOwnership(pendingOwner);
+        emit OwnerTransitionComplete(pendingOwner);
+        console.log("Ownership transition complete: New Owner:", pendingOwner);
 
         pendingOwner = address(0);
         transitionStart = 0;
@@ -212,8 +268,14 @@ contract Registry is Ownable {
      * @notice Extends OZ Ownable `_checkOwner` function to block owner calls, if there is an ongoing transition.
      */
     function _checkOwner() internal view override {
+        console.log("Checking owner...");
+        console.log("Owner:", owner());
+        console.log("Caller:", _msgSender());
         require(owner() == _msgSender(), "Ownable: caller is not the owner");
-        if (transitionStart != 0) revert Registry__TransitionPending();
+        if (transitionStart != 0) {
+            console.log("Error: Transition pending");
+            revert Registry__TransitionPending();
+        }
     }
 
     // ============================================ PAUSE LOGIC ============================================
@@ -247,32 +309,52 @@ contract Registry is Ownable {
      * @notice Allows multisig to pause multiple cellars in a single call.
      */
     function batchPause(address[] calldata targets) external onlyOwner {
-        for (uint256 i; i < targets.length; ++i) _pauseTarget(targets[i]);
+        console.log("Batch pausing targets");
+
+        for (uint256 i; i < targets.length; ++i) {
+            _pauseTarget(targets[i]);
+        }
     }
 
     /**
      * @notice Allows multisig to unpause multiple cellars in a single call.
      */
     function batchUnpause(address[] calldata targets) external onlyOwner {
-        for (uint256 i; i < targets.length; ++i) _unpauseTarget(targets[i]);
+        console.log("Batch unpausing targets");
+
+        for (uint256 i; i < targets.length; ++i) {
+            _unpauseTarget(targets[i]);
+        }
     }
 
     /**
      * @notice Helper function to pause some target.
      */
     function _pauseTarget(address target) internal {
-        if (isCallerPaused[target]) revert Registry__TargetAlreadyPaused(target);
+        console.log("Pausing target:", target);
+
+        if (isCallerPaused[target]) {
+            console.log("Error: Target already paused:", target);
+            revert Registry__TargetAlreadyPaused(target);
+        }
         isCallerPaused[target] = true;
         emit TargetPaused(target);
+        console.log("Target paused:", target);
     }
 
     /**
      * @notice Helper function to unpause some target.
      */
     function _unpauseTarget(address target) internal {
-        if (!isCallerPaused[target]) revert Registry__TargetNotPaused(target);
+        console.log("Unpausing target:", target);
+
+        if (!isCallerPaused[target]) {
+            console.log("Error: Target not paused:", target);
+            revert Registry__TargetNotPaused(target);
+        }
         isCallerPaused[target] = false;
         emit TargetUnpaused(target);
+        console.log("Target unpaused:", target);
     }
 
     // ============================================ ADAPTOR LOGIC ============================================
@@ -307,11 +389,20 @@ contract Registry is Ownable {
      * @param adaptor address of the adaptor to trust
      */
     function trustAdaptor(address adaptor) external onlyOwner {
-        if (isAdaptorTrusted[adaptor]) revert Registry__AdaptorAlreadyTrusted(adaptor);
+        console.log("Trusting adaptor:", adaptor);
+
+        if (isAdaptorTrusted[adaptor]) {
+            console.log("Error: Adaptor already trusted:", adaptor);
+            revert Registry__AdaptorAlreadyTrusted(adaptor);
+        }
         bytes32 identifier = BaseAdaptor(adaptor).identifier();
-        if (isIdentifierUsed[identifier]) revert Registry__IdentifierNotUnique();
+        if (isIdentifierUsed[identifier]) {
+            // console.log("Error: Identifier not unique:", identifier);
+            revert Registry__IdentifierNotUnique();
+        }
         isAdaptorTrusted[adaptor] = true;
         isIdentifierUsed[identifier] = true;
+        console.log("Adaptor trusted:", adaptor);
     }
 
     /**
@@ -319,9 +410,15 @@ contract Registry is Ownable {
      * @dev Doing so prevents Cellars from adding this adaptor to their catalogue.
      */
     function distrustAdaptor(address adaptor) external onlyOwner {
-        if (!isAdaptorTrusted[adaptor]) revert Registry__AdaptorNotTrusted(adaptor);
+        console.log("Distrusting adaptor:", adaptor);
+
+        if (!isAdaptorTrusted[adaptor]) {
+            console.log("Error: Adaptor not trusted:", adaptor);
+            revert Registry__AdaptorNotTrusted(adaptor);
+        }
         // Set trust to false.
         isAdaptorTrusted[adaptor] = false;
+        console.log("Adaptor distrusted:", adaptor);
 
         // We are NOT resetting `isIdentifierUsed` because if this adaptor is distrusted, then something needs
         // to change about the new one being re-trusted.
@@ -331,7 +428,10 @@ contract Registry is Ownable {
      * @notice Reverts if `adaptor` is not trusted by the registry.
      */
     function revertIfAdaptorIsNotTrusted(address adaptor) external view {
-        if (!isAdaptorTrusted[adaptor]) revert Registry__AdaptorNotTrusted(adaptor);
+        if (!isAdaptorTrusted[adaptor]) {
+            console.log("Error: Adaptor not trusted:", adaptor);
+            revert Registry__AdaptorNotTrusted(adaptor);
+        }
     }
 
     // ============================================ POSITION LOGIC ============================================
@@ -414,22 +514,35 @@ contract Registry is Ownable {
      * @param adaptorData arbitrary bytes used to configure this position
      */
     function trustPosition(uint32 positionId, address adaptor, bytes memory adaptorData) external onlyOwner {
+        console.log("Trusting position: Position ID:", positionId, "Adaptor:", adaptor);
+
         bytes32 identifier = BaseAdaptor(adaptor).identifier();
         bool isDebt = BaseAdaptor(adaptor).isDebt();
         bytes32 positionHash = keccak256(abi.encode(identifier, isDebt, adaptorData));
 
-        if (positionId == 0) revert Registry__InvalidPositionInput();
+        if (positionId == 0) {
+            console.log("Error: Invalid position input");
+            revert Registry__InvalidPositionInput();
+        }
         // Make sure positionId is not already in use.
         PositionData storage pData = getPositionIdToPositionData[positionId];
-        if (pData.adaptor != address(0)) revert Registry__InvalidPositionInput();
+        if (pData.adaptor != address(0)) {
+            console.log("Error: Invalid position input, position ID already in use");
+            revert Registry__InvalidPositionInput();
+        }
 
         // Check that...
         // `adaptor` is a non zero address
         // position has not been already set up
-        if (adaptor == address(0) || getPositionHashToPositionId[positionHash] != 0)
+        if (adaptor == address(0) || getPositionHashToPositionId[positionHash] != 0) {
+            console.log("Error: Invalid position input, adaptor is zero address or position already set up");
             revert Registry__InvalidPositionInput();
+        }
 
-        if (!isAdaptorTrusted[adaptor]) revert Registry__AdaptorNotTrusted(adaptor);
+        if (!isAdaptorTrusted[adaptor]) {
+            console.log("Error: Adaptor not trusted");
+            revert Registry__AdaptorNotTrusted(adaptor);
+        }
 
         // Set position data.
         pData.adaptor = adaptor;
@@ -446,10 +559,16 @@ contract Registry is Ownable {
         ERC20[] memory assets = BaseAdaptor(adaptor).assetsUsed(adaptorData);
         PriceRouter priceRouter = PriceRouter(getAddress[PRICE_ROUTER_REGISTRY_SLOT]);
         for (uint256 i; i < assets.length; i++) {
-            if (!priceRouter.isSupported(assets[i])) revert Registry__PositionPricingNotSetUp(address(assets[i]));
+            if (!priceRouter.isSupported(assets[i])) {
+                console.log("Error: Position pricing not set up for asset:", address(assets[i]));
+                revert Registry__PositionPricingNotSetUp(address(assets[i]));
+            }
         }
 
         emit Registry__PositionTrusted(positionId, adaptor, isDebt, adaptorData);
+        console.log("Position trusted: Position ID:", positionId);
+        console.log("Position trusted: Adaptor:", adaptor);
+        console.log("Position trusted: Is Debt:", isDebt);
     }
 
     /**
@@ -458,9 +577,15 @@ contract Registry is Ownable {
      *      and adding the position to their tracked arrays.
      */
     function distrustPosition(uint32 positionId) external onlyOwner {
-        if (!isPositionTrusted[positionId]) revert Registry__PositionIsNotTrusted(positionId);
+        console.log("Distrusting position: Position ID:", positionId);
+
+        if (!isPositionTrusted[positionId]) {
+            console.log("Error: Position is not trusted");
+            revert Registry__PositionIsNotTrusted(positionId);
+        }
         isPositionTrusted[positionId] = false;
         emit Registry__PositionDistrusted(positionId);
+        console.log("Position distrusted: Position ID:", positionId);
     }
 
     /**
@@ -472,12 +597,21 @@ contract Registry is Ownable {
     function addPositionToCellar(
         uint32 positionId
     ) external view returns (address adaptor, bool isDebt, bytes memory adaptorData) {
-        if (positionId == 0) revert Registry__PositionDoesNotExist();
+        console.log("Adding position to cellar: Position ID:", positionId);
+
+        if (positionId == 0) {
+            console.log("Error: Position does not exist");
+            revert Registry__PositionDoesNotExist();
+        }
         PositionData memory positionData = getPositionIdToPositionData[positionId];
-        if (positionData.adaptor == address(0)) revert Registry__PositionDoesNotExist();
+        if (positionData.adaptor == address(0)) {
+            console.log("Error: Position does not exist");
+            revert Registry__PositionDoesNotExist();
+        }
 
         revertIfPositionIsNotTrusted(positionId);
 
+        console.log("Position added to cellar: Adaptor:", positionData.adaptor, "Is Debt:", positionData.isDebt);
         return (positionData.adaptor, positionData.isDebt, positionData.adaptorData);
     }
 
@@ -485,6 +619,9 @@ contract Registry is Ownable {
      * @notice Reverts if `positionId` is not trusted by the registry.
      */
     function revertIfPositionIsNotTrusted(uint32 positionId) public view {
-        if (!isPositionTrusted[positionId]) revert Registry__PositionIsNotTrusted(positionId);
+        if (!isPositionTrusted[positionId]) {
+            console.log("Error: Position is not trusted: Position ID:", positionId);
+            revert Registry__PositionIsNotTrusted(positionId);
+        }
     }
 }
