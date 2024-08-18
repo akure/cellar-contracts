@@ -42,12 +42,14 @@ contract SepoliaAddresses {
     ERC20 public USDC = ERC20(0x7Fc21ceb0C5003576ab5E101eB240c2b822c95d2);
     ERC20 public WETH = ERC20(0x5f207d42F869fd1c71d7f0f81a2A67Fc20FF7323);
     ERC20 public LINK = ERC20(0x779877A7B0D9E8603169DdbD7836e478b4624789);
+    ERC20 public BTC = ERC20(0x0f86141Ff41F397602AD169b59dbe6f318987234);
 
     // Chainlink Automatoin
     address public automationRegistryV2 = 0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad;
     address public automationRegistrarV2 = 0xb0E49c5D0d05cbc241d68c05BC5BA1d1B7B72976;
     // Chainlink Datafeeds
     address public WETH_USD_FEED = 0x694AA1769357215DE4FAC081bf1f309aDC325306;
+    address public BTC_USD_FEED = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
 
     // Uniswap
     address public uniswapV3PositionManager = 0x1238536071E1c677A632429e3655c799b22cDA52;

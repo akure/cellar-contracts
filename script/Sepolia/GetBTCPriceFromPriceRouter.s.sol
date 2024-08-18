@@ -8,7 +8,7 @@ interface IPriceRouter {
     function getPriceInUSD(address asset) external view returns (uint256);
 }
 /**
-* @notice  source .env && forge script script/Sepolia/PriceRouterTest.s.sol:GetBTCPrice --rpc-url $ETHEREUM_SEPOLIA_RPC_URL  --broadcast
+* @notice  source .env && forge script script/Sepolia/GetBTCPriceFromPriceRouter.s.sol:GetBTCPrice --rpc-url $ETHEREUM_SEPOLIA_RPC_URL  --broadcast
 **/
 contract GetBTCPrice is Script {
     // address constant WETH_ADDRESS = 0x5f207d42F869fd1c71d7f0f81a2A67Fc20FF7323;
@@ -31,7 +31,7 @@ contract GetBTCPrice is Script {
 }
 
 /* Expected output -
-source .env && forge script script/Sepolia/PriceRouterTest.s.sol:GetBTCPrice --rpc-url $ETHEREUM_SEPOLIA_RPC_URL  --broadcast
+source .env && forge script script/Sepolia/GetBTCPriceFromPriceRouter.s.sol:GetBTCPrice --rpc-url $ETHEREUM_SEPOLIA_RPC_URL  --broadcast
 [⠢] Compiling...
 [⠢] Compiling 1 files with Solc 0.8.21
 [⠆] Solc 0.8.21 finished in 840.73ms
