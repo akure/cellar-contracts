@@ -69,11 +69,6 @@ contract DeployPriceRouterScript is Script, SepoliaAddresses, ContractDeployment
         console.log("Registry at index 2 :", registry.getAddress(2));
 
         // Deploy Price Router
-        // creationCode = type(PriceRouter).creationCode;
-        // constructorArgs = abi.encode(ARB_SEQUENCER_UPTIME_FEED, uint256(3_600), dev0Address, registry, WETH);
-        // priceRouter = PriceRouter(deployer.deployContract(priceRouterName, creationCode, constructorArgs, 0));
-        
-        // Deploy Price Router
         creationCode = type(PriceRouter).creationCode;
         console.log("Price Router creation code length:", creationCode.length);
         constructorArgs = abi.encode(dev0Address, registry, WETH);
@@ -101,51 +96,7 @@ contract DeployPriceRouterScript is Script, SepoliaAddresses, ContractDeployment
 
         priceRouter.addAsset(WETH, settings, abi.encode(stor), price);
         console.log("Added WETH asset to PriceRouter");
-        // price = priceRouter.getValue(WETH, price, USDC);
-        // console.log("Added WETH asset from PriceRouter :", price);
 
-        /*
-        price = uint256(IChainlinkAggregator(USDC_USD_FEED).latestAnswer());
-        settings = PriceRouter.AssetSettings(CHAINLINK_DERIVATIVE, USDC_USD_FEED);
-        priceRouter.addAsset(USDC, settings, abi.encode(stor), price);
-
-        price = uint256(IChainlinkAggregator(USDCe_USD_FEED).latestAnswer());
-        settings = PriceRouter.AssetSettings(CHAINLINK_DERIVATIVE, USDCe_USD_FEED);
-        priceRouter.addAsset(USDCe, settings, abi.encode(stor), price);
-
-        price = uint256(IChainlinkAggregator(DAI_USD_FEED).latestAnswer());
-        settings = PriceRouter.AssetSettings(CHAINLINK_DERIVATIVE, DAI_USD_FEED);
-        priceRouter.addAsset(DAI, settings, abi.encode(stor), price);
-
-        price = uint256(IChainlinkAggregator(USDT_USD_FEED).latestAnswer());
-        settings = PriceRouter.AssetSettings(CHAINLINK_DERIVATIVE, USDT_USD_FEED);
-        priceRouter.addAsset(USDT, settings, abi.encode(stor), price);
-
-        price = uint256(IChainlinkAggregator(LUSD_USD_FEED).latestAnswer());
-        settings = PriceRouter.AssetSettings(CHAINLINK_DERIVATIVE, LUSD_USD_FEED);
-        priceRouter.addAsset(LUSD, settings, abi.encode(stor), price);
-
-        price = uint256(IChainlinkAggregator(FRAX_USD_FEED).latestAnswer());
-        settings = PriceRouter.AssetSettings(CHAINLINK_DERIVATIVE, FRAX_USD_FEED);
-        priceRouter.addAsset(FRAX, settings, abi.encode(stor), price);
-
-
-        stor.inETH = true;
-
-        price = uint256(IChainlinkAggregator(WSTETH_EXCHANGE_RATE_FEED).latestAnswer());
-        price = priceRouter.getValue(WETH, price, USDC);
-        price = price.changeDecimals(6, 8);
-        settings = PriceRouter.AssetSettings(CHAINLINK_DERIVATIVE, WSTETH_EXCHANGE_RATE_FEED);
-        priceRouter.addAsset(WSTETH, settings, abi.encode(stor), price);
-
-        price = uint256(IChainlinkAggregator(RETH_EXCHANGE_RATE_FEED).latestAnswer());
-        price = priceRouter.getValue(WETH, price, USDC);
-        price = price.changeDecimals(6, 8);
-        settings = PriceRouter.AssetSettings(CHAINLINK_DERIVATIVE, RETH_EXCHANGE_RATE_FEED);
-        priceRouter.addAsset(rETH, settings, abi.encode(stor), price);
-
-        priceRouter.transferOwnership(multisig);
-         */
         vm.stopBroadcast();
     }
 
