@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity 0.8.21;
+
+import "forge-std/Script.sol";
+import {AaveV3ATokenAdaptor} from "src/modules/adaptors/Aave/V3/AaveV3ATokenAdaptor.sol";
+
+contract TestUnderlyingAssetAddressScript is Script {
+    address public aaveAdaptorAddress = 0x91542358C085f4fbce50194B3Ddb293E12db0F7a; // AaveV3ATokenAdaptor address
+
+    function run() public {
+        AaveV3ATokenAdaptor aaveAdaptor = AaveV3ATokenAdaptor(aaveAdaptorAddress);
+
+        // Try calling UNDERLYING_ASSET_ADDRESS directly
+        try aaveAdaptor.UNDERLYING_ASSET_ADDRESS() returns (address underlyingAsset) {
+            console.log("UNDERLYING_ASSET_ADDRESS returned:", underlyingAsset);
+        } catch (bytes memory reason) {
+            console.log("Call to UNDERLYING_ASSET_ADDRESS failed with reason:", string(reason));
+        }
+    }
+}
+

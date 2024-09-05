@@ -1,0 +1,188 @@
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity 0.8.21;
+
+import "forge-std/Script.sol";
+import {AaveV3ATokenAdaptor} from "src/modules/adaptors/Aave/V3/AaveV3ATokenAdaptor.sol";
+import {ERC20} from "solmate/tokens/ERC20.sol";
+import {IPoolV3} from "src/interfaces/external/IPoolV3.sol";
+import {IAaveToken} from "src/interfaces/external/IAaveToken.sol";
+import {IAaveOracle} from "src/interfaces/external/IAaveOracle.sol";
+
+/**
+* @notice An example of adding a price asset to the price router.
+* command ->  source .env && forge script script/Sepolia/DeployAVVEV3Cellar.s.sol:DeployAVVEV3Cellar --rpc-url $ETHEREUM_SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast
+*  source .env && forge script script/Sepolia/TestAaveV3TokenAdaptor.s.sol:AaveAdaptorScript --rpc-url $ETHEREUM_SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast
+**/
+
+contract AaveAdaptorScript is Script {
+    // Aave V3 Sepolia addresses
+    address public aaveV3Pool = 0x7Ee60D184C24Ef7AfC1Ec7Be59A0f448A0abd138;
+    address public aaveV3Oracle = 0x2da88497588bf89281816106C7259e31AF45a663;
+    ERC20 public aV3USDC = ERC20(0x16dA4541aD1807f4443d92D26044C1147406EB80);
+    ERC20 public testUSDC = ERC20(0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238);
+
+    AaveV3ATokenAdaptor public aaveAdaptor;
+
+    function run() public {
+        // Start broadcasting transactions to the network
+        vm.startBroadcast();
+        console.log("Running AaveAdaptorScript:");
+
+        // Set a realistic minimum health factor (e.g., 1.01)
+        uint256 minHealthFactor = 1.01e18;
+
+        // Deploy the AaveV3ATokenAdaptor with the provided Pool, Oracle, and minimum health factor
+        aaveAdaptor = new AaveV3ATokenAdaptor(aaveV3Pool, aaveV3Oracle, minHealthFactor);
+        console.log("Deployed AaveV3ATokenAdaptor at:", address(aaveAdaptor));
+
+        // Allocate Sepolia ETH to the contract for testing purposes
+        // vm.deal(address(this), 0.5 ether);
+        console.log("Sepolia ETH allocated to this contract:", 0.5 ether);
+
+        // Check the contract's USDC balance
+        checkBalance();
+
+        // Deposit USDC into the AaveV3ATokenAdaptor
+        deposit();
+
+        // Withdraw USDC from the AaveV3ATokenAdaptor
+        // withdraw();
+
+        // Stop broadcasting transactions
+        vm.stopBroadcast();
+    }
+
+    function checkBalance() public {
+        console.log("Starting checkBalance:");
+        console.log("Address of this contract:", address(this));
+        console.log("Address of testUSDC:", address(testUSDC));
+
+        // Check the contract's balance directly
+        uint256 balance = testUSDC.balanceOf(address(this));
+        console.log("Contract USDC balance:", balance);
+    }
+
+    function deposit() public {
+        console.log("Starting deposit:");
+
+        // Pre-check balances of all relevant addresses before the operation
+        uint256 contractBalance = testUSDC.balanceOf(address(this));
+        console.log("Contract USDC balance before:", contractBalance);
+
+        uint256 adaptorBalanceBefore = testUSDC.balanceOf(address(aaveAdaptor));
+        console.log("Adaptor USDC balance before:", adaptorBalanceBefore);
+
+        uint256 depositAmount = 0.001 * 1e6; // 1 USDC
+
+        console.log("Deposit Amount:", depositAmount);
+
+        // Check if the msg.sender has allowed this contract to spend USDC
+        uint256 senderAllowance = testUSDC.allowance(msg.sender, address(this));
+        console.log("Sender's current allowance for this contract:", senderAllowance);
+
+        // Ensure that the allowance is greater than or equal to the deposit amount
+        if (senderAllowance < depositAmount) {
+            revert("Sender has not approved enough USDC for transfer.");
+        }
+
+        // Ensure that the contract has the expected USDC balance
+        if (contractBalance < depositAmount) {
+            console.log("Transferring USDC to contract...");
+            testUSDC.transferFrom(msg.sender, address(this), depositAmount);
+            console.log("Transferred", depositAmount, "USDC to contract.");
+        }
+
+        uint256 initialBalance = testUSDC.balanceOf(address(this));
+        console.log("Contract USDC balance after funding check:", initialBalance);
+
+        // Approve the AaveV3ATokenAdaptor to spend USDC
+        testUSDC.approve(address(aaveAdaptor), depositAmount);
+        console.log("USDC approved for adaptor.");
+
+        // Attempt the deposit operation
+        bytes memory adaptorData = abi.encode(address(testUSDC));
+        aaveAdaptor.deposit(depositAmount, adaptorData, "");
+        console.log("Deposit function executed.");
+
+        // Check the balance after deposit
+        uint256 balance = testUSDC.balanceOf(address(aaveAdaptor));
+        console.log("Adaptor USDC balance after deposit:", balance);
+    }
+
+
+    function withdraw() public {
+        console.log("Starting withdraw:");
+
+        uint256 depositAmount = 1 * 1e6; // 1 USDC
+
+        // Encode the adaptor data with the aToken address
+        bytes memory adaptorData = abi.encode(address(testUSDC));
+
+        // Define the receiver address (in this case, the test contract itself)
+        address receiver = address(this);
+        console.log("Receiver address for withdrawal:", receiver);
+
+        // Perform the withdrawal operation
+        aaveAdaptor.withdraw(depositAmount, receiver, adaptorData, "");
+
+        // Verify that the withdrawal was successful by checking the receiver's balance
+        uint256 balance = testUSDC.balanceOf(receiver);
+        console.log("Receiver USDC balance after withdrawal:", balance);
+    }
+}
+
+/*
+
+ak@ak-pad:~/somm/cellar-contracts$ source .env && forge script script/Sepolia/TestAaveV3TokenAdaptor.s.sol:AaveAdaptorScript --rpc-url $ETHEREUM_SEPOLIA_RPC_URL --private-key $PRIVATE_KEY --broadcast
+[⠆] Compiling...
+[⠘] Compiling 1 files with Solc 0.8.21
+[⠊] Solc 0.8.21 finished in 4.39s
+Compiler run successful with warnings:
+Warning (2018): Function state mutability can be restricted to view
+  --> script/Sepolia/TestAaveV3TokenAdaptor.s.sol:55:5:
+   |
+55 |     function checkBalance() public {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Script ran successfully.
+
+== Logs ==
+  Running AaveAdaptorScript:
+  Deployed AaveV3ATokenAdaptor at: 0xE28cE238cf7862593f032Bd0E619B734b03daE56
+  Sepolia ETH allocated to this contract: 500000000000000000
+  Starting checkBalance:
+  Address of this contract: 0x5b73C5498c1E3b4dbA84de0F1833c4a029d90519
+  Address of testUSDC: 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
+  Contract USDC balance: 0
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 11155111
+
+Estimated gas price: 167.600499772 gwei
+
+Estimated total gas used for script: 2088386
+
+Estimated amount required: 0.350014537316847992 ETH
+
+==========================
+
+##### sepolia
+✅  [Success]Hash: 0x0bea346410d1c243d7e0c5a4aaa31aad6de120465ce161e81b3c9716b5cc16b3
+Contract Address: 0xE28cE238cf7862593f032Bd0E619B734b03daE56
+Block: 6573906
+Paid: 0.13125195961270624 ETH (1606451 gas * 81.70305824 gwei)
+
+✅ Sequence #1 on sepolia | Total Paid: 0.13125195961270624 ETH (1606451 gas * avg 81.70305824 gwei)
+
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+
+Transactions saved to: /home/ak/somm/cellar-contracts/broadcast/TestAaveV3TokenAdaptor.s.sol/11155111/run-latest.json
+
+Sensitive values saved to: /home/ak/somm/cellar-contracts/cache/TestAaveV3TokenAdaptor.s.sol/11155111/run-latest.json
+*/

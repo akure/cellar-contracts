@@ -1,0 +1,10 @@
+
+AK - settings 
+
+devStrategist = 0x35c5cA6CD3656E5f8362AE25A6b5973A6070bEf5
+address public deployerAddress = 0x35c5cA6CD3656E5f8362AE25A6b5973A6070bEf5
+address public dev0Address = 0x35c5cA6CD3656E5f8362AE25A6b5973A6070bEf5
+
+AaveV3ATokenAdaptor = 0x0d9fbce03884cdd4ad9de463eba884aabccad62c
+Registry = 0x484024acbe5e5bf5493be14f43721481a2cf38db
+Price Router = 0x38bc18f1e115d235e7d921ec41780b0c8244414f

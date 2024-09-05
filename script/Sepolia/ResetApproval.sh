@@ -1,0 +1,21 @@
+#!/bin/bash
+cd ../../
+
+echo "REVOKE"
+# cast send <USDC_CONTRACT_ADDRESS> --private-key <PRIVATE_KEY> "approve(address,uint256)" <ADAPTOR_CONTRACT_ADDRESS> <AMOUNT>
+#source .env && cast send 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 --private-key $PRIVATE_KEY "approve(address,uint256)" 0x91542358C085f4fbce50194B3Ddb293E12db0F7a 1000000 --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+source .env && cast send 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 --private-key $PRIVATE_KEY "approve(address,uint256)" 0x91542358C085f4fbce50194B3Ddb293E12db0F7a 0 --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+echo "CHECK"
+#cast call <USDC_CONTRACT_ADDRESS> "allowance(address,address)" <OWNER_ADDRESS> <SPENDER_ADDRESS>
+source .env && cast call 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "allowance(address,address)" 0x35c5cA6CD3656E5f8362AE25A6b5973A6070bEf5  0x91542358C085f4fbce50194B3Ddb293E12db0F7a --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+echo "RE APPROVE"
+source .env && cast send 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 --private-key $PRIVATE_KEY "approve(address,uint256)" 0x91542358C085f4fbce50194B3Ddb293E12db0F7a 1000000 --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+
+echo "CHECK"
+#cast call <USDC_CONTRACT_ADDRESS> "allowance(address,address)" <OWNER_ADDRESS> <SPENDER_ADDRESS>
+source .env && cast call 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238 "allowance(address,address)" 0x35c5cA6CD3656E5f8362AE25A6b5973A6070bEf5  0x91542358C085f4fbce50194B3Ddb293E12db0F7a --rpc-url $ETHEREUM_SEPOLIA_RPC_URL
+
+: <<'COMMENT'
+
+
+COMMENT

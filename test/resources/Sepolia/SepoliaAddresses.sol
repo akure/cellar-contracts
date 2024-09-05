@@ -34,8 +34,10 @@ contract SepoliaAddresses {
     address public aaveV3Pool = 0x7Ee60D184C24Ef7AfC1Ec7Be59A0f448A0abd138;
     address public aaveV3Oracle = 0x2da88497588bf89281816106C7259e31AF45a663;
     // Aave V3 Tokens
+    // https://docs.aave.com/developers/deployed-contracts/v3-testnet-addresses
     ERC20 public aV3USDC = ERC20(0x16dA4541aD1807f4443d92D26044C1147406EB80);
     ERC20 public aV3WETH = ERC20(0x5b071b590a59395fE4025A0Ccc1FcC931AAc1830);
+    ERC20 public aV3DAI = ERC20(0x29598b72eb5CeBd806C5dCD549490FdA35B13cD8);
 
     
     // ERC20s
@@ -43,6 +45,7 @@ contract SepoliaAddresses {
     ERC20 public WETH = ERC20(0x5f207d42F869fd1c71d7f0f81a2A67Fc20FF7323);
     ERC20 public LINK = ERC20(0x779877A7B0D9E8603169DdbD7836e478b4624789);
     ERC20 public BTC = ERC20(0x0f86141Ff41F397602AD169b59dbe6f318987234);
+    // ERC20 public DAI = ERC20(0x82fb927676b53b6ee07904780c7be9b4b50db80b);
 
     // Chainlink Automatoin
     address public automationRegistryV2 = 0x86EFBD0b6736Bed994962f9797049422A3A8E8Ad;
@@ -50,6 +53,7 @@ contract SepoliaAddresses {
     // Chainlink Datafeeds
     address public WETH_USD_FEED = 0x694AA1769357215DE4FAC081bf1f309aDC325306;
     address public BTC_USD_FEED = 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43;
+    address public DAI_USD_FEED = 0x14866185B1962B63C3Ea9E03Bc1da838bab34C19;
 
     // Uniswap
     address public uniswapV3PositionManager = 0x1238536071E1c677A632429e3655c799b22cDA52;

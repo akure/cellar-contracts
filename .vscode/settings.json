@@ -1,33 +1,14 @@
 {
-  "C_Cpp.updateChannel": "Insiders",
-  "editor.suggestSelection": "first",
-  "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
-  "C_Cpp.autoAddFileAssociations": false,
-  "sonarlint.disableTelemetry": true,
-  "tabnine.experimentalAutoImports": true,
-  "editor.largeFileOptimizations": false,
-  "diffEditor.renderSideBySide": false,
-  "go.lintOnSave": "file",
-  "go.languageServerFlags": [
-
+  "solidity.packageDefaultDependenciesContractsDirectory": [
+    "src",
+    "script",
   ],
-  "files.insertFinalNewline": true,
-  "go.toolsManagement.autoUpdate": true,
-  "[python]": {
-    "editor.formatOnType": true
-  },
-  "debug.allowBreakpointsEverywhere": true,
-  "git.openRepositoryInParentFolders": "never",
-  "window.zoomLevel": 3,
-  "JSON-zain.json.autorefresh": true,
-  "json.format.keepLines": true,
-  "json.schemas": [
-  ],
-  "editor.maxTokenizationLineLength": 20000000,
-  "lldb.suppressUpdateNotifications": true,
-  "window.confirmSaveUntitledWorkspace": false,
-  "workbench.colorTheme": "GitHub Light",
-  "solidity.packageDefaultDependenciesContractsDirectory": "src",
   "solidity.packageDefaultDependenciesDirectory": "lib",
-
+  "solidity.compileUsingRemoteVersion": "v0.8.21",
+  "search.exclude": { "lib": false },
+  "editor.formatOnSave": true,
+  "[solidity]": {
+    "editor.defaultFormatter": "JuanBlanco.solidity"
+  },
+  "solidity.formatter": "forge",
 }
